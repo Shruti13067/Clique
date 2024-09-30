@@ -1,0 +1,264 @@
+<html></html>
+<head>
+    <title>Clique</title>
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        const App = () => {
+            const [searchQuery, setSearchQuery] = useState('');
+            const [cliques, setcliques] = useState([]);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [isStudentsChecked, setIsStudentsChecked] = useState(false);
+            const [newPost, setNewPost] = useState({
+                heading: '',
+                description: '',
+                media: null,
+                faculty: false,
+                students: false,
+                years: []
+            });
+            const [view, setView] = useState('VLSI');
+            const [isListOpen, setIsListOpen] = useState(false);
+
+            const handleSearch = (e) => {
+                setSearchQuery(e.target.value);
+            };
+
+            const handleStudentsCheck = () => {
+                setIsStudentsChecked(!isStudentsChecked);
+            };
+
+            const handleInputChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                if (type === 'checkbox') {
+                    setNewPost(prevState => ({
+                        ...prevState,
+                        [name]: checked
+                    }));
+                } else if (type === 'file') {
+                    setNewPost(prevState => ({
+                        ...prevState,
+                        media: e.target.files[0]
+                    }));
+                } else {
+                    setNewPost(prevState => ({
+                        ...prevState,
+                        [name]: value
+                    }));
+                }
+            };
+
+            const handleYearCheck = (year) => {
+                setNewPost(prevState => ({
+                    ...prevState,
+                    years: prevState.years.includes(year)
+                        ? prevState.years.filter(y => y !== year)
+                        : [...prevState.years, year]
+                }));
+            };
+
+            const handlePost = () => {
+                const newclique = {
+                    id: cliques.length + 1,
+                    user: 'New User',
+                    handle: '@new_user',
+                    time: 'now',
+                    content: `${newPost.heading}: ${newPost.description}`,
+                    image: newPost.media ? URL.createObjectURL(newPost.media) : null,
+                    comments: 0,
+                    recliques: 0,
+                    likes: 0,
+                    liked: false,
+                    bookmarked: false
+                };
+                setcliques([newclique, ...cliques]);
+                setIsModalOpen(false);
+                setNewPost({
+                    heading: '',
+                    description: '',
+                    media: null,
+                    faculty: false,
+                    students: false,
+                    years: []
+                });
+            };
+
+            const handleDelete = (id) => {
+                setcliques(cliques.filter(clique => clique.id !== id));
+            };
+
+            const handleLike = (id) => {
+                setcliques(cliques.map(clique => clique.id === id ? { ...clique, likes: clique.liked ? clique.likes - 1 : clique.likes + 1, liked: !clique.liked } : clique));
+            };
+
+            const handleComment = (id) => {
+                setcliques(cliques.map(clique => clique.id === id ? { ...clique, comments: clique.comments + 1 } : clique));
+            };
+
+            const handleBookmark = (id) => {
+                setcliques(cliques.map(clique => clique.id === id ? { ...clique, bookmarked: !clique.bookmarked } : clique));
+            };
+
+            const filteredcliques = cliques.filter(clique => clique.content.toLowerCase().includes(searchQuery.toLowerCase()));
+            const bookmarkedcliques = cliques.filter(clique => clique.bookmarked);
+
+            return (
+                <div className="relative flex h-screen">
+                    <div className="w-1/4 p-4 border-r border-gray-200 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center mb-6">
+                                <span className="text-orange-500 text-3xl font-bold">CLIQUE</span>
+                            </div>
+                            <nav className="space-y-4">
+                                <a href="../home.html" className={`flex items-center ${view === 'home' ? 'text-orange-500 font-bold' : 'text-gray-700'}`} onClick={() => setView('home')}>
+                                    <i className="fas fa-home mr-4"></i> Home
+                                </a>
+                                <a href="../home.html" className={`flex items-center ${view === 'bookmarks' ? 'text-orange-500 font-bold' : 'text-gray-700'}`} onClick={() => setView('bookmarks')}>
+                                    <i className="far fa-bookmark mr-4"></i> Bookmarks
+                                </a>
+                                <div>
+                                    <div className={`flex items-center cursor-pointer ${view === 'lists' ? 'text-orange-500 font-bold' : 'text-gray-700'}`} onClick={() => setIsListOpen(!isListOpen)}>
+                                        <i className="far fa-list-alt mr-4"></i> Lists
+                                        <i className={`fas fa-chevron-down ml-auto ${isListOpen ? 'transform rotate-180' : ''}`}></i>
+                                    </div>
+                                    {isListOpen && (
+                                        <div className="ml-8 mt-2 space-y-2">
+                                            <a href="../lists/software.html" className="text-gray-700" onClick={() => setView('software')}>Software</a><br></br><hr></hr>
+                                            <a href="../lists/embedded.html" className="text-gray-700" onClick={() => setView('embedded')}>Embedded System</a><br></br><hr></hr>
+                                            <a href="../lists/robotics.html" className="text-gray-700" onClick={() => setView('robotics')}>Robotics</a><br></br><hr></hr>
+                                            <a href="../lists/vlsi.html" className="text-gray-700" onClick={() => setView('vlsi')}>VLSI</a><hr></hr>
+                                        </div>
+                                    )}
+                                </div>
+                                <a href="../home.html" className={`flex items-center ${view === 'profile' ? 'text-orange-500 font-bold' : 'text-gray-700'}`} onClick={() => setView('profile')}>
+                                    <i className="far fa-user mr-4"></i> Profile
+                                </a>
+                            </nav>
+                        </div>
+                        <a href="../signpage.html" >
+                                    <button className="mt-6 bg-orange-500 text-white py-2 px-4 rounded-full w-full">LogOut</button>
+                                </a>
+                       
+                    </div>
+                    <div className="flex-1 p-4 ml-1/4">
+                        <div className={`border-b border-gray-200 pb-4 mb-4 flex items-center justify-between ${view === 'software' || view === 'embedded' || view === 'robotics' || view === 'vlsi' ? 'bg-black text-white' : ''}`}>
+                            <h1 className="text-xl font-bold">{view.charAt(0).toUpperCase() + view.slice(1)}</h1>
+                            <div className="flex items-center">
+                                <input type="text" placeholder="Search" className="w-full border border-gray-300 rounded-full py-2 px-4 focus:outline-none" value={searchQuery} onChange={handleSearch} />
+                                <button className="ml-2 bg-orange-500 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center" onClick={() => setIsModalOpen(true)}>
+                                    <i className="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            {cliques.length === 0 ? (
+                                <p className="text-center text-gray-500">No posts...</p>
+                            ) : (
+                                (view === 'home' ? filteredcliques : view === 'bookmarks' ? bookmarkedcliques : []).map(clique => (
+                                    <div key={clique.id} className="flex flex-col space-y-2">
+                                        <div className="flex items-start">
+                                            <img src="https://placehold.co/50x50" alt="User profile" className="rounded-full mr-4" />
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <span className="font-bold mr-2">{clique.user}</span>
+                                                        <span className="text-gray-500">{clique.handle} · {clique.time}</span>
+                                                    </div>
+                                                    <button className="text-gray-500" onClick={() => handleDelete(clique.id)}>
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                                <p className="mb-2">{clique.content}</p>
+                                                {clique.image && <img src={clique.image} alt="clique image" className="rounded-lg mb-2" />}
+                                                <div className="flex space-x-4 text-gray-500">
+                                                    <button className="flex items-center space-x-1" onClick={() => handleComment(clique.id)}>
+                                                        <i className="far fa-comment"></i>
+                                                        <span>{clique.comments}</span>
+                                                    </button>
+                                                    <button className="flex items-center space-x-1" onClick={() => handleLike(clique.id)}>
+                                                        <i className={`fas fa-heart ${clique.liked ? 'text-gray-500' : 'text-gray-400'}`}></i>
+                                                        <span>{clique.likes}</span>
+                                                    </button>
+                                                    <button className="flex items-center space-x-1" onClick={() => handleBookmark(clique.id)}>
+                                                        <i className={`far fa-bookmark ${clique.bookmarked ? 'text-orange-500' : 'text-gray-400'}`}></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr className="border-gray-200" />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                    {isModalOpen && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                            <div className="bg-white p-8 rounded-lg shadow-lg z-50 w-full max-w-lg">
+                                <h2 className="text-xl font-bold mb-4">Create a Post</h2>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2">Heading</label>
+                                    <input type="text" name="heading" placeholder="Heading" className="w-full border border-gray-300 rounded-lg p-4" value={newPost.heading} onChange={handleInputChange} />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2">Description</label>
+                                    <textarea name="description" className="w-full border border-gray-300 rounded-lg p-4" rows="4" placeholder="Description" value={newPost.description} onChange={handleInputChange}></textarea>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2">Media</label>
+                                    <input type="file" name="media" className="w-full border border-gray-300 rounded-lg p-4" accept="image/*,video/*" onChange={handleInputChange} />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="inline-flex items-center">
+                                        <input type="checkbox" name="faculty" className="form-checkbox" checked={newPost.faculty} onChange={handleInputChange} />
+                                        <span className="ml-2">Faculty</span>
+                                    </label>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="inline-flex items-center">
+                                        <input type="checkbox" name="students" className="form-checkbox" checked={newPost.students} onChange={handleStudentsCheck} />
+                                        <span className="ml-2">Students</span>
+                                    </label>
+                                    {isStudentsChecked && (
+                                        <div className="mt-2 ml-6">
+                                            <label className="block">
+                                                <input type="checkbox" className="form-checkbox" checked={newPost.years.includes('First Year')} onChange={() => handleYearCheck('First Year')} />
+                                                <span className="ml-2">First Year</span>
+                                            </label>
+                                            <label className="block">
+                                                <input type="checkbox" className="form-checkbox" checked={newPost.years.includes('Second Year')} onChange={() => handleYearCheck('Second Year')} />
+                                                <span className="ml-2">Second Year</span>
+                                            </label>
+                                            <label className="block">
+                                                <input type="checkbox" className="form-checkbox" checked={newPost.years.includes('Third Year')} onChange={() => handleYearCheck('Third Year')} />
+                                                <span className="ml-2">Third Year</span>
+                                            </label>
+                                            <label className="block">
+                                                <input type="checkbox" className="form-checkbox" checked={newPost.years.includes('Fourth Year')} onChange={() => handleYearCheck('Fourth Year')} />
+                                                <span className="ml-2">Fourth Year</span>
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex justify-end">
+                                    <button className="bg-orange-500 text-white py-2 px-4 rounded-full mr-2" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                    <button className="bg-orange-500 text-white py-2 px-4 rounded-full" onClick={handlePost}>Post</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
